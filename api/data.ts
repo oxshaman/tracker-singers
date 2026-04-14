@@ -1,38 +1,43 @@
-import { put, del, list } from '@vercel/blob';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import { put, list } from '@vercel/blob';
 
 const BLOB_PATH = 'data.json';
 
-interface Category {
-  id: string;
-  name: string;
-  type: 'expense' | 'income';
-}
-
-interface Transaction {
-  id: string;
-  categoryId: string;
-  amount: number;
-  description: string;
-  date: string;
-  type: 'expense' | 'income';
-  paidBy?: string;
-}
-
 interface AppData {
-  categories: Category[];
-  transactions: Transaction[];
+  categories: Array<{ id: string; name: string; type: 'expense' | 'income' }>;
+  transactions: Array<{
+    id: string;
+    categoryId: string;
+    amount: number;
+    description: string;
+    date: string;
+    type: 'expense' | 'income';
+    paidBy?: string;
+  }>;
 }
 
 const EMPTY: AppData = { categories: [], transactions: [] };
 
-async function readData(): Promise<AppData> {
-  const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
-  if (blobs.length === 0) return EMPTY;
+const json = (data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 
-  const res = await fetch(blobs[0].url);
-  if (!res.ok) return EMPTY;
-  return (await res.json()) as AppData;
+async function readData(): Promise<AppData> {
+  try {
+    const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
+    if (blobs.length === 0) return EMPTY;
+    const res = await fetch(blobs[0].url);
+    if (!res.ok) return EMPTY;
+    return (await res.json()) as AppData;
+  } catch {
+    return EMPTY;
+  }
 }
 
 async function writeData(data: AppData): Promise<void> {
@@ -43,78 +48,52 @@ async function writeData(data: AppData): Promise<void> {
   });
 }
 
-function parseBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let body = '';
-    req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
-    req.on('end', () => resolve(body));
-    req.on('error', reject);
-  });
+export async function GET() {
+  try {
+    const data = await readData();
+    return json(data);
+  } catch (err: unknown) {
+    return json({ error: err instanceof Error ? err.message : 'Read failed' }, 500);
+  }
 }
 
-export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 204;
-    res.end();
-    return;
-  }
-
+export async function POST(request: Request) {
   try {
-    if (req.method === 'GET') {
-      const data = await readData();
-      res.setHeader('Content-Type', 'application/json');
-      res.statusCode = 200;
-      res.end(JSON.stringify(data));
-      return;
+    const { action, payload } = await request.json();
+    const data = await readData();
+
+    switch (action) {
+      case 'addCategory':
+        data.categories.push(payload);
+        break;
+      case 'deleteCategory':
+        data.categories = data.categories.filter((c) => c.id !== payload.id);
+        data.transactions = data.transactions.filter((t) => t.categoryId !== payload.id);
+        break;
+      case 'addTransaction':
+        data.transactions.push(payload);
+        break;
+      case 'deleteTransaction':
+        data.transactions = data.transactions.filter((t) => t.id !== payload.id);
+        break;
+      default:
+        return json({ error: 'Unknown action' }, 400);
     }
 
-    if (req.method === 'POST') {
-      const raw = await parseBody(req);
-      const { action, payload } = JSON.parse(raw);
-      const data = await readData();
-
-      switch (action) {
-        case 'addCategory':
-          data.categories.push(payload);
-          break;
-
-        case 'deleteCategory':
-          data.categories = data.categories.filter((c) => c.id !== payload.id);
-          data.transactions = data.transactions.filter((t) => t.categoryId !== payload.id);
-          break;
-
-        case 'addTransaction':
-          data.transactions.push(payload);
-          break;
-
-        case 'deleteTransaction':
-          data.transactions = data.transactions.filter((t) => t.id !== payload.id);
-          break;
-
-        default:
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: 'Unknown action' }));
-          return;
-      }
-
-      await writeData(data);
-      res.setHeader('Content-Type', 'application/json');
-      res.statusCode = 200;
-      res.end(JSON.stringify(data));
-      return;
-    }
-
-    res.statusCode = 405;
-    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    await writeData(data);
+    return json(data);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('API /data error:', message, err);
-    res.statusCode = 500;
-    res.setHeader('Content-Type', 'application/json');
-    res.end(JSON.stringify({ error: message }));
+    return json({ error: err instanceof Error ? err.message : 'Write failed' }, 500);
   }
+}
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }
