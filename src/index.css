@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sora: 'Sora', system-ui, sans-serif;
+
+  /* Deep navy text hierarchy */
+  --color-ink: #1A1A2E;
+  --color-ink-secondary: #6E6E82;
+  --color-ink-muted: #A8A8BA;
+  --color-ink-faint: #C8C8D4;
+
+  /* Surfaces */
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #FAFAFC;
+  --color-surface-page: #F5F5F8;
+  --color-border: #EBEBF0;
+  --color-border-light: #F2F2F6;
+
+  /* Pastel: Sage (income/payments) */
+  --color-sage-50: #F4FAF6;
+  --color-sage-100: #E3F2E8;
+  --color-sage-200: #C2E3CC;
+  --color-sage-400: #7BC492;
+  --color-sage-500: #5BB57A;
+  --color-sage-600: #3D8F58;
+  --color-sage-700: #2D6A42;
+
+  /* Pastel: Rose (expenses) */
+  --color-rose-50: #FEF5F3;
+  --color-rose-100: #FDE8E3;
+  --color-rose-200: #F9CFC6;
+  --color-rose-400: #E8907E;
+  --color-rose-500: #DF7461;
+  --color-rose-600: #C4533F;
+  --color-rose-700: #9D3F2F;
+
+  /* Pastel: Periwinkle (primary/categories) */
+  --color-peri-50: #F2F3FC;
+  --color-peri-100: #E4E7F7;
+  --color-peri-200: #C9CEEF;
+  --color-peri-400: #8B9FDE;
+  --color-peri-500: #6B7FD3;
+  --color-peri-600: #4F5FB8;
+  --color-peri-700: #3D4A8C;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.35s ease-out;
+  --animate-slide-up: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-scale-in: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Stagger children */
+.stagger > :nth-child(1) { animation-delay: 0ms; }
+.stagger > :nth-child(2) { animation-delay: 60ms; }
+.stagger > :nth-child(3) { animation-delay: 120ms; }
+.stagger > :nth-child(4) { animation-delay: 180ms; }
+.stagger > :nth-child(5) { animation-delay: 240ms; }
+.stagger > :nth-child(6) { animation-delay: 300ms; }
+.stagger > * {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface-page);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--color-peri-200);
+  color: var(--color-peri-700);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.4;
+  cursor: pointer;
+}
