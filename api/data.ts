@@ -1,7 +1,7 @@
-import { put, head, list } from '@vercel/blob';
+import { put, del, list } from '@vercel/blob';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-const BLOB_PATH = 'xpensetracker/data.json';
+const BLOB_PATH = 'data.json';
 
 interface Category {
   id: string;
@@ -27,34 +27,20 @@ interface AppData {
 const EMPTY: AppData = { categories: [], transactions: [] };
 
 async function readData(): Promise<AppData> {
-  try {
-    const { blobs } = await list({ prefix: BLOB_PATH });
-    if (blobs.length === 0) return EMPTY;
+  const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
+  if (blobs.length === 0) return EMPTY;
 
-    const latest = blobs[blobs.length - 1];
-    const res = await fetch(latest.url);
-    if (!res.ok) return EMPTY;
-    return (await res.json()) as AppData;
-  } catch {
-    return EMPTY;
-  }
+  const res = await fetch(blobs[0].url);
+  if (!res.ok) return EMPTY;
+  return (await res.json()) as AppData;
 }
 
 async function writeData(data: AppData): Promise<void> {
-  // Clean up old blobs first
-  const { blobs } = await list({ prefix: BLOB_PATH });
-  
   await put(BLOB_PATH, JSON.stringify(data), {
     contentType: 'application/json',
     access: 'public',
     addRandomSuffix: false,
   });
-
-  // Delete old versions if any existed before the write
-  const { del } = await import('@vercel/blob');
-  for (const blob of blobs) {
-    try { await del(blob.url); } catch { /* ignore */ }
-  }
 }
 
 function parseBody(req: IncomingMessage): Promise<string> {
@@ -77,16 +63,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     return;
   }
 
-  if (req.method === 'GET') {
-    const data = await readData();
-    res.setHeader('Content-Type', 'application/json');
-    res.statusCode = 200;
-    res.end(JSON.stringify(data));
-    return;
-  }
+  try {
+    if (req.method === 'GET') {
+      const data = await readData();
+      res.setHeader('Content-Type', 'application/json');
+      res.statusCode = 200;
+      res.end(JSON.stringify(data));
+      return;
+    }
 
-  if (req.method === 'POST') {
-    try {
+    if (req.method === 'POST') {
       const raw = await parseBody(req);
       const { action, payload } = JSON.parse(raw);
       const data = await readData();
@@ -119,13 +105,16 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       res.setHeader('Content-Type', 'application/json');
       res.statusCode = 200;
       res.end(JSON.stringify(data));
-    } catch (err) {
-      res.statusCode = 500;
-      res.end(JSON.stringify({ error: 'Internal error' }));
+      return;
     }
-    return;
-  }
 
-  res.statusCode = 405;
-  res.end(JSON.stringify({ error: 'Method not allowed' }));
+    res.statusCode = 405;
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('API /data error:', message, err);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ error: message }));
+  }
 }
