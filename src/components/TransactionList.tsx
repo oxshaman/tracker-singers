@@ -44,10 +44,10 @@ export function TransactionList({ transactions, categories, onDelete }: Transact
             {/* Content */}
             <div className="min-w-0 flex-1">
               <p className="text-[13px] font-medium text-ink truncate">
-                {isIncome && t.paidBy ? t.paidBy : getCategoryName(t.categoryId)}
+                {t.paidBy || getCategoryName(t.categoryId)}
               </p>
               <p className="text-[11px] text-ink-muted mt-0.5 truncate">
-                {isIncome && t.paidBy && (
+                {t.paidBy && (
                   <span className="text-ink-secondary">{getCategoryName(t.categoryId)} · </span>
                 )}
                 {formatDate(t.date)}

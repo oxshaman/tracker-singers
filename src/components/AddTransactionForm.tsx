@@ -83,21 +83,19 @@ export function AddTransactionForm({ type, categories, onAdd, onClose, onOpenAdd
         </select>
       </div>
 
-      {!isExpense && (
-        <div>
-          <label htmlFor="tx-paid-by" className="block text-[12px] font-medium text-ink-secondary mb-2">
-            Tko je uplatio/la
-          </label>
-          <input
-            id="tx-paid-by"
-            type="text"
-            value={paidBy}
-            onChange={(e) => setPaidBy(e.target.value)}
-            placeholder="Ime i prezime"
-            className={inputClasses}
-          />
-        </div>
-      )}
+      <div>
+        <label htmlFor="tx-paid-by" className="block text-[12px] font-medium text-ink-secondary mb-2">
+          {isExpense ? 'Tko je platio/la' : 'Tko je uplatio/la'}
+        </label>
+        <input
+          id="tx-paid-by"
+          type="text"
+          value={paidBy}
+          onChange={(e) => setPaidBy(e.target.value)}
+          placeholder="Ime i prezime"
+          className={inputClasses}
+        />
+      </div>
 
       <div>
         <label htmlFor="tx-amount" className="block text-[12px] font-medium text-ink-secondary mb-2">
@@ -144,7 +142,7 @@ export function AddTransactionForm({ type, categories, onAdd, onClose, onOpenAdd
 
       <button
         type="submit"
-        disabled={!categoryId || !amount || (!isExpense && !paidBy.trim())}
+        disabled={!categoryId || !amount || !paidBy.trim()}
         className={`w-full py-3 rounded-xl text-white text-[13px] font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] ${submitColor}`}
       >
         Dodaj {isExpense ? 'trošak' : 'uplatu'}
