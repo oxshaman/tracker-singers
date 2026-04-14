@@ -45,6 +45,7 @@ async function writeData(data: AppData): Promise<void> {
     contentType: 'application/json',
     access: 'private',
     addRandomSuffix: false,
+    allowOverwrite: true,
   });
 }
 
