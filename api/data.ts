@@ -32,7 +32,7 @@ async function readData(): Promise<AppData> {
   try {
     const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
     if (blobs.length === 0) return EMPTY;
-    const res = await fetch(blobs[0].url);
+    const res = await fetch(blobs[0].downloadUrl);
     if (!res.ok) return EMPTY;
     return (await res.json()) as AppData;
   } catch {
@@ -43,7 +43,7 @@ async function readData(): Promise<AppData> {
 async function writeData(data: AppData): Promise<void> {
   await put(BLOB_PATH, JSON.stringify(data), {
     contentType: 'application/json',
-    access: 'public',
+    access: 'private',
     addRandomSuffix: false,
   });
 }
