@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Trash2, Plus } from 'lucide-react';
 import type { Category, Transaction, TransactionType } from '../types';
-import { generateId } from '../utils';
+import { DatePicker } from './DatePicker';
+import { generateId, parseDmy, todayDmy } from '../utils';
 
 interface MultiAddViewProps {
   type: TransactionType;
@@ -20,17 +21,13 @@ interface DraftRow {
   description: string;
 }
 
-function todayIso(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
 function emptyRow(defaultCategoryId: string): DraftRow {
   return {
     key: generateId(),
     categoryId: defaultCategoryId,
     paidBy: '',
     amount: '',
-    date: todayIso(),
+    date: todayDmy(),
     description: '',
   };
 }
@@ -51,7 +48,7 @@ function isRowValid(r: DraftRow): boolean {
   if (!r.categoryId) return false;
   const n = parseAmount(r.amount);
   if (isNaN(n) || n <= 0) return false;
-  if (!r.date) return false;
+  if (!parseDmy(r.date)) return false;
   return true;
 }
 
@@ -128,12 +125,14 @@ export function MultiAddView({
   const handleSaveAll = () => {
     if (validRows.length === 0) return;
     validRows.forEach((r) => {
+      const parsedDate = parseDmy(r.date);
+      if (!parsedDate) return;
       onAdd({
         id: generateId(),
         categoryId: r.categoryId,
         amount: parseAmount(r.amount),
         description: r.description.trim(),
-        date: new Date(r.date).toISOString(),
+        date: parsedDate.toISOString(),
         type,
         ...(r.paidBy.trim() && { paidBy: r.paidBy.trim() }),
       });
@@ -219,7 +218,7 @@ export function MultiAddView({
             <p className="text-[11px] text-rose-600">
               {invalidTouchedCount}{' '}
               {invalidTouchedCount === 1 ? 'red je nepotpun' : 'redova je nepotpuno'} — potrebni su
-              kategorija, iznos i datum.
+              kategorija, iznos i datum (dd/mm/yyyy).
             </p>
           </div>
         )}
@@ -315,14 +314,14 @@ export function MultiAddView({
                         />
                       </td>
                       <td className="px-1 py-1 align-middle">
-                        <input
-                          type="date"
+                        <DatePicker
+                          bare
+                          showIcon={false}
                           value={row.date}
-                          onChange={(e) => {
-                            updateRow(row.key, { date: e.target.value });
+                          onChange={(v) => {
+                            updateRow(row.key, { date: v });
                             ensureTrailingEmptyRow();
                           }}
-                          className={cellInput}
                         />
                       </td>
                       <td className="px-1 py-1 align-middle">

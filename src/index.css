@@ -92,9 +92,97 @@ body {
   color: var(--color-peri-700);
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
-  opacity: 0.4;
-  cursor: pointer;
+/* react-day-picker: brand theme + compact layout */
+.app-datepicker {
+  --rdp-accent-color: var(--color-peri-500);
+  --rdp-accent-background-color: var(--color-peri-500);
+  --rdp-today-color: var(--color-peri-600);
+  --rdp-day-height: 2rem;
+  --rdp-day-width: 2rem;
+  --rdp-day_button-height: 2rem;
+  --rdp-day_button-width: 2rem;
+  --rdp-day_button-border-radius: 0.625rem;
+  --rdp-selected-border: 2px solid var(--color-peri-500);
+  --rdp-nav-height: 2rem;
+  --rdp-weekday-opacity: 1;
+  --rdp-weekday-padding: 0.5rem 0;
+  --rdp-weekday-text-align: center;
+  --rdp-months-gap: 0;
+  font-family: var(--font-sora);
+  color: var(--color-ink);
+}
+
+.app-datepicker .rdp-root {
+  padding: 12px 12px 4px;
+}
+
+.app-datepicker .rdp-month_caption {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  padding: 0 2px 8px;
+  text-transform: capitalize;
+}
+
+.app-datepicker .rdp-nav {
+  top: 10px;
+}
+
+.app-datepicker .rdp-button_previous,
+.app-datepicker .rdp-button_next {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--color-ink-secondary);
+}
+.app-datepicker .rdp-button_previous:hover:not([disabled]),
+.app-datepicker .rdp-button_next:hover:not([disabled]) {
+  background: var(--color-surface-page);
+  color: var(--color-peri-700);
+}
+
+.app-datepicker .rdp-weekday {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.app-datepicker .rdp-day {
+  font-size: 12.5px;
+  color: var(--color-ink);
+}
+
+.app-datepicker .rdp-day_button {
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: background-color 120ms, color 120ms, border-color 120ms;
+}
+.app-datepicker .rdp-day_button:hover:not([disabled]) {
+  background: var(--color-peri-50);
+  color: var(--color-peri-700);
+}
+
+.app-datepicker .rdp-outside .rdp-day_button {
+  color: var(--color-ink-faint);
+}
+
+.app-datepicker .rdp-today:not(.rdp-selected) .rdp-day_button {
+  color: var(--color-peri-600);
+  font-weight: 600;
+}
+
+.app-datepicker .rdp-selected .rdp-day_button,
+.app-datepicker .rdp-selected .rdp-day_button:hover {
+  background: var(--color-peri-500) !important;
+  color: #fff !important;
+  border-color: var(--color-peri-500) !important;
+}
+
+.app-datepicker .rdp-disabled .rdp-day_button {
+  opacity: 0.35;
 }
 
 /* Print: only the export sheet is visible when printing */

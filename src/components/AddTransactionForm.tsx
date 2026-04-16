@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Category, Transaction, TransactionType } from '../types';
-import { generateId } from '../utils';
+import { DatePicker } from './DatePicker';
+import { generateId, parseDmy, todayDmy } from '../utils';
 
 interface AddTransactionFormProps {
   type: TransactionType;
@@ -16,19 +17,20 @@ export function AddTransactionForm({ type, categories, onAdd, onClose, onOpenAdd
   const [amount, setAmount] = useState('');
   const [paidBy, setPaidBy] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<string>(() => todayDmy());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const parsedAmount = parseFloat(amount.replace(',', '.'));
-    if (!categoryId || isNaN(parsedAmount) || parsedAmount <= 0) return;
+    const parsedDate = parseDmy(date);
+    if (!categoryId || isNaN(parsedAmount) || parsedAmount <= 0 || !parsedDate) return;
 
     onAdd({
       id: generateId(),
       categoryId,
       amount: parsedAmount,
       description: description.trim(),
-      date: new Date(date).toISOString(),
+      date: parsedDate.toISOString(),
       type,
       ...(paidBy.trim() && { paidBy: paidBy.trim() }),
     });
@@ -117,12 +119,11 @@ export function AddTransactionForm({ type, categories, onAdd, onClose, onOpenAdd
         <label htmlFor="tx-date" className="block text-[12px] font-medium text-ink-secondary mb-2">
           Datum
         </label>
-        <input
+        <DatePicker
           id="tx-date"
-          type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className={inputClasses}
+          onChange={setDate}
+          ariaLabel="Datum"
         />
       </div>
 
@@ -142,7 +143,7 @@ export function AddTransactionForm({ type, categories, onAdd, onClose, onOpenAdd
 
       <button
         type="submit"
-        disabled={!categoryId || !amount || !paidBy.trim()}
+        disabled={!categoryId || !amount || !paidBy.trim() || !parseDmy(date)}
         className={`w-full py-3 rounded-xl text-white text-[13px] font-semibold transition-colors disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] ${submitColor}`}
       >
         Dodaj {isExpense ? 'trošak' : 'uplatu'}

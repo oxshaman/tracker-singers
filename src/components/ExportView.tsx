@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Printer, Download, FileSpreadsheet } from 'lucide-react';
 import type { Category, Transaction, TransactionType } from '../types';
-import { formatCurrency } from '../utils';
+import { DatePicker } from './DatePicker';
+import { dmyToIsoDate, dateToDmy, formatCurrency, parseDmy } from '../utils';
 
 interface ExportViewProps {
   transactions: Transaction[];
@@ -10,13 +11,6 @@ interface ExportViewProps {
 }
 
 type FilterType = 'all' | TransactionType;
-
-function toISODate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
 
 function formatDateShort(iso: string): string {
   return new Intl.DateTimeFormat('hr-HR', {
@@ -55,20 +49,27 @@ export function ExportView({ transactions, categories, onClose }: ExportViewProp
   const min = allDates.length ? new Date(Math.min(...allDates.map((d) => d.getTime()))) : new Date();
   const max = allDates.length ? new Date(Math.max(...allDates.map((d) => d.getTime()))) : new Date();
 
-  const [fromDate, setFromDate] = useState<string>(toISODate(min));
-  const [toDate, setToDate] = useState<string>(toISODate(max));
+  const [fromDate, setFromDate] = useState<string>(dateToDmy(min));
+  const [toDate, setToDate] = useState<string>(dateToDmy(max));
   const [filter, setFilter] = useState<FilterType>('all');
 
   const categoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name ?? 'Nepoznato';
 
   const filtered = useMemo(() => {
-    const from = new Date(fromDate + 'T00:00:00');
-    const to = new Date(toDate + 'T23:59:59');
+    const fromParsed = parseDmy(fromDate);
+    const toParsed = parseDmy(toDate);
+    const from = fromParsed
+      ? new Date(fromParsed.getFullYear(), fromParsed.getMonth(), fromParsed.getDate(), 0, 0, 0)
+      : null;
+    const to = toParsed
+      ? new Date(toParsed.getFullYear(), toParsed.getMonth(), toParsed.getDate(), 23, 59, 59)
+      : null;
     return transactions
       .filter((t) => {
         const d = new Date(t.date);
-        if (d < from || d > to) return false;
+        if (from && d < from) return false;
+        if (to && d > to) return false;
         if (filter !== 'all' && t.type !== filter) return false;
         return true;
       })
@@ -127,7 +128,7 @@ export function ExportView({ transactions, categories, onClose }: ExportViewProp
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `blagajna_${fromDate}_${toDate}.csv`;
+    a.download = `blagajna_${dmyToIsoDate(fromDate) || 'od'}_${dmyToIsoDate(toDate) || 'do'}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -168,24 +169,28 @@ export function ExportView({ transactions, categories, onClose }: ExportViewProp
 
         {/* Filters */}
         <div className="max-w-[960px] mx-auto px-5 py-3 flex flex-wrap items-center gap-3 border-t border-border-light">
-          <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
-            Od
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="px-2 py-1 rounded-md border border-border bg-surface text-[12px] text-ink"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-[12px] text-ink-secondary">
-            Do
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="px-2 py-1 rounded-md border border-border bg-surface text-[12px] text-ink"
-            />
-          </label>
+          <div className="flex items-center gap-2 text-[12px] text-ink-secondary">
+            <span>Od</span>
+            <div className="w-[140px]">
+              <DatePicker
+                value={fromDate}
+                onChange={setFromDate}
+                ariaLabel="Od datuma"
+                inputClassName="!px-2.5 !py-1 !rounded-md !text-[12px]"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-[12px] text-ink-secondary">
+            <span>Do</span>
+            <div className="w-[140px]">
+              <DatePicker
+                value={toDate}
+                onChange={setToDate}
+                ariaLabel="Do datuma"
+                inputClassName="!px-2.5 !py-1 !rounded-md !text-[12px]"
+              />
+            </div>
+          </div>
           <div className="flex rounded-md border border-border overflow-hidden text-[12px]">
             {(['all', 'income', 'expense'] as FilterType[]).map((f) => (
               <button
