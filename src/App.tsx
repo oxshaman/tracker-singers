@@ -1,14 +1,15 @@
 import { useState, useCallback } from 'react';
-import { TrendingDown, TrendingUp, Layers, Music2, Loader2, X, FileText } from 'lucide-react';
+import { TrendingDown, TrendingUp, Layers, Music2, Loader2, X, FileText, Rows3 } from 'lucide-react';
 import { useApiData } from './hooks/useApiData';
 import { SummaryCards } from './components/SummaryCards';
 import { Modal } from './components/Modal';
 import { AddCategoryForm } from './components/AddCategoryForm';
 import { AddTransactionForm } from './components/AddTransactionForm';
+import { MultiAddView } from './components/MultiAddView';
 import { TransactionList } from './components/TransactionList';
 import { CategoryList } from './components/CategoryList';
 import { ExportView } from './components/ExportView';
-import type { Category, Transaction } from './types';
+import type { Category, Transaction, TransactionType } from './types';
 
 type ModalType = 'category' | 'expense' | 'income' | null;
 
@@ -27,6 +28,7 @@ function App() {
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [showExport, setShowExport] = useState(false);
+  const [multiAddType, setMultiAddType] = useState<TransactionType | null>(null);
   const closeModal = useCallback(() => setActiveModal(null), []);
 
   const handleAddCategory = useCallback(
@@ -145,6 +147,27 @@ function App() {
                 </span>
               </button>
             </div>
+
+            <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+              <button
+                onClick={() => setMultiAddType('income')}
+                className="group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-surface border border-border hover:border-sage-400 transition-colors duration-200"
+              >
+                <Rows3 size={14} strokeWidth={1.8} className="text-sage-600" />
+                <span className="text-[12px] font-medium text-ink-secondary group-hover:text-sage-700 transition-colors">
+                  Dodaj više uplata
+                </span>
+              </button>
+              <button
+                onClick={() => setMultiAddType('expense')}
+                className="group flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-surface border border-border hover:border-rose-400 transition-colors duration-200"
+              >
+                <Rows3 size={14} strokeWidth={1.8} className="text-rose-600" />
+                <span className="text-[12px] font-medium text-ink-secondary group-hover:text-rose-700 transition-colors">
+                  Dodaj više troškova
+                </span>
+              </button>
+            </div>
           </section>
 
           {/* Categories */}
@@ -198,6 +221,19 @@ function App() {
           transactions={transactions}
           categories={categories}
           onClose={() => setShowExport(false)}
+        />
+      )}
+
+      {multiAddType && (
+        <MultiAddView
+          type={multiAddType}
+          categories={categories}
+          onAdd={handleAddTransaction}
+          onClose={() => setMultiAddType(null)}
+          onOpenAddCategory={() => {
+            setMultiAddType(null);
+            setActiveModal('category');
+          }}
         />
       )}
     </div>
