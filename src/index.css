@@ -125,6 +125,62 @@ body {
   text-transform: capitalize;
 }
 
+.app-datepicker .rdp-dropdowns {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.app-datepicker .rdp-dropdown_root {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  border-radius: 8px;
+  padding: 2px 4px 2px 8px;
+  transition: border-color 120ms, background 120ms;
+}
+.app-datepicker .rdp-dropdown_root:hover {
+  border-color: var(--color-peri-400);
+}
+.app-datepicker .rdp-dropdown_root:focus-within {
+  border-color: var(--color-peri-500);
+  background: var(--color-peri-50);
+}
+
+.app-datepicker .rdp-caption_label {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-ink);
+  padding: 2px 14px 2px 2px;
+  border: 0 !important;
+  background: transparent !important;
+  text-transform: capitalize;
+  pointer-events: none;
+}
+
+.app-datepicker .rdp-dropdown {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  appearance: none;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  z-index: 1;
+}
+
+.app-datepicker .rdp-chevron {
+  color: var(--color-ink-muted);
+}
+
 .app-datepicker .rdp-nav {
   top: 10px;
 }

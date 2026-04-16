@@ -189,10 +189,19 @@ export function DatePicker({
               onMonthChange={setVisibleMonth}
               weekStartsOn={1}
               showOutsideDays
+              captionLayout="dropdown"
+              startMonth={new Date(new Date().getFullYear() - 20, 0)}
+              endMonth={new Date(new Date().getFullYear() + 5, 11)}
               formatters={{
                 formatWeekdayName: (date) => WEEKDAYS_HR[date.getDay()],
                 formatCaption: (date) =>
                   `${MONTHS_HR[date.getMonth()]} ${date.getFullYear()}`,
+                formatMonthDropdown: (monthIndex) =>
+                  MONTHS_HR[
+                    typeof monthIndex === 'number' ? monthIndex : (monthIndex as Date).getMonth()
+                  ],
+                formatYearDropdown: (year) =>
+                  String(typeof year === 'number' ? year : (year as Date).getFullYear()),
               }}
               components={{
                 Chevron: ({ orientation }) =>
@@ -205,6 +214,8 @@ export function DatePicker({
               labels={{
                 labelPrevious: () => 'Prethodni mjesec',
                 labelNext: () => 'Sljedeći mjesec',
+                labelMonthDropdown: () => 'Mjesec',
+                labelYearDropdown: () => 'Godina',
               }}
             />
             <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-border-light">
