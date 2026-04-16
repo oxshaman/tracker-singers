@@ -9,9 +9,13 @@ interface AppData {
 const API_URL = '/api/data';
 
 async function fetchData(): Promise<AppData> {
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL, { cache: 'no-store' });
   if (!res.ok) throw new Error('Failed to load data');
-  return res.json();
+  const body = await res.json();
+  if (body && typeof body === 'object' && 'error' in body) {
+    throw new Error(String(body.error));
+  }
+  return body as AppData;
 }
 
 async function postAction(action: string, payload: unknown): Promise<AppData> {
@@ -19,9 +23,14 @@ async function postAction(action: string, payload: unknown): Promise<AppData> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action, payload }),
+    cache: 'no-store',
   });
   if (!res.ok) throw new Error('Failed to save');
-  return res.json();
+  const body = await res.json();
+  if (body && typeof body === 'object' && 'error' in body) {
+    throw new Error(String(body.error));
+  }
+  return body as AppData;
 }
 
 export function useApiData() {

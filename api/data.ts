@@ -1,4 +1,4 @@
-import { put, list } from '@vercel/blob';
+import { put, get, BlobNotFoundError } from '@vercel/blob';
 
 const BLOB_PATH = 'data.json';
 
@@ -28,15 +28,25 @@ const json = (data: unknown, status = 200) =>
     },
   });
 
+/**
+ * Reads the private blob via the authenticated `get` helper.
+ *
+ * A plain `fetch(downloadUrl)` will NOT work for private blobs: it returns
+ * 401/403 and — if its failure is swallowed — callers end up treating the
+ * store as empty and overwriting real data on the next write.
+ *
+ * We intentionally distinguish "blob missing" (first run) from "read failed"
+ * (bug / auth issue / network). Only the former is safe to treat as empty.
+ */
 async function readData(): Promise<AppData> {
   try {
-    const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
-    if (blobs.length === 0) return EMPTY;
-    const res = await fetch(blobs[0].downloadUrl);
-    if (!res.ok) return EMPTY;
-    return (await res.json()) as AppData;
-  } catch {
-    return EMPTY;
+    const result = await get(BLOB_PATH, { access: 'private', useCache: false });
+    if (!result || result.statusCode !== 200 || !result.stream) return EMPTY;
+    const text = await new Response(result.stream).text();
+    return JSON.parse(text) as AppData;
+  } catch (err) {
+    if (err instanceof BlobNotFoundError) return EMPTY;
+    throw err;
   }
 }
 
@@ -54,6 +64,7 @@ export async function GET() {
     const data = await readData();
     return json(data);
   } catch (err: unknown) {
+    console.error('[api/data] GET failed:', err);
     return json({ error: err instanceof Error ? err.message : 'Read failed' }, 500);
   }
 }
@@ -84,6 +95,7 @@ export async function POST(request: Request) {
     await writeData(data);
     return json(data);
   } catch (err: unknown) {
+    console.error('[api/data] POST failed:', err);
     return json({ error: err instanceof Error ? err.message : 'Write failed' }, 500);
   }
 }
