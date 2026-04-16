@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { TrendingDown, TrendingUp, Layers, Music2, Loader2, X } from 'lucide-react';
+import { TrendingDown, TrendingUp, Layers, Music2, Loader2, X, FileText } from 'lucide-react';
 import { useApiData } from './hooks/useApiData';
 import { SummaryCards } from './components/SummaryCards';
 import { Modal } from './components/Modal';
@@ -7,6 +7,7 @@ import { AddCategoryForm } from './components/AddCategoryForm';
 import { AddTransactionForm } from './components/AddTransactionForm';
 import { TransactionList } from './components/TransactionList';
 import { CategoryList } from './components/CategoryList';
+import { ExportView } from './components/ExportView';
 import type { Category, Transaction } from './types';
 
 type ModalType = 'category' | 'expense' | 'income' | null;
@@ -25,6 +26,7 @@ function App() {
   } = useApiData();
 
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [showExport, setShowExport] = useState(false);
   const closeModal = useCallback(() => setActiveModal(null), []);
 
   const handleAddCategory = useCallback(
@@ -84,6 +86,16 @@ function App() {
               Pjevačka skupina
             </span>
           </div>
+          <div className="flex-1" />
+          <button
+            onClick={() => setShowExport(true)}
+            disabled={transactions.length === 0}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium text-ink-secondary hover:bg-surface-page hover:text-peri-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            aria-label="Izvoz / Ispis"
+          >
+            <FileText size={15} strokeWidth={1.8} />
+            <span className="hidden sm:inline">Izvoz</span>
+          </button>
         </div>
       </header>
 
@@ -180,6 +192,14 @@ function App() {
           onOpenAddCategory={() => setActiveModal('category')}
         />
       </Modal>
+
+      {showExport && (
+        <ExportView
+          transactions={transactions}
+          categories={categories}
+          onClose={() => setShowExport(false)}
+        />
+      )}
     </div>
   );
 }

@@ -96,3 +96,61 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0.4;
   cursor: pointer;
 }
+
+/* Print: only the export sheet is visible when printing */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+
+  html, body {
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-root,
+  .print-root * {
+    visibility: visible;
+  }
+
+  .print-root {
+    position: static !important;
+    inset: auto !important;
+    overflow: visible !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-sheet {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .ledger-table {
+    font-size: 10.5px !important;
+  }
+
+  .ledger-table th,
+  .ledger-table td {
+    padding: 4px 6px !important;
+  }
+
+  .ledger-table thead {
+    display: table-header-group;
+  }
+
+  .ledger-table tr {
+    page-break-inside: avoid;
+  }
+
+  .signature-row {
+    page-break-inside: avoid;
+  }
+}
