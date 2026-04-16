@@ -20,6 +20,16 @@ function formatDateShort(iso: string): string {
   }).format(new Date(iso));
 }
 
+function formatDmyShort(dmy: string): string {
+  const d = parseDmy(dmy);
+  if (!d) return dmy;
+  return new Intl.DateTimeFormat('hr-HR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(d);
+}
+
 function formatDateTime(d: Date): string {
   return new Intl.DateTimeFormat('hr-HR', {
     day: '2-digit',
@@ -227,7 +237,7 @@ export function ExportView({ transactions, categories, onClose }: ExportViewProp
             <p>
               <span className="uppercase tracking-wider">Razdoblje:</span>{' '}
               <span className="text-ink font-medium">
-                {formatDateShort(fromDate)} – {formatDateShort(toDate)}
+                {formatDmyShort(fromDate)} – {formatDmyShort(toDate)}
               </span>
             </p>
             <p>
